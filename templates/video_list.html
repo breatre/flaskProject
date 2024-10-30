@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video List</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        .video-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .video-item {
+            margin: 10px;
+            text-align: center;
+            width: 30%;
+        }
+        video {
+            width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Video List</h1>
+    <div class="video-container">
+        {% for video in videos %}
+        <div class="video-item">
+            <video controls>
+                <source src="/stream/{{ video }}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+            <p>{{ video }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
+
