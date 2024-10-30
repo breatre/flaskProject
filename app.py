@@ -10,12 +10,20 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # 从文件加载留言
 def load_messages():
     messages = []
-    if os.path.exists(MESSAGE_FILE):
-        with open(MESSAGE_FILE, 'r', encoding='utf-8') as f:
-            for line in f:
-                content, timestamp = line.strip().split('|')
-                messages.append({'content': content, 'timestamp': timestamp})
+    with open('messages.txt', 'r') as file:
+        for line in file:
+            line = line.strip()
+            if line:  # 确保行不为空
+                # 使用 | 分割行，分成内容和时间戳
+                parts = line.split('|', 1)  # 只分割成两个部分
+                if len(parts) == 2:  # 确保我们得到了两个部分
+                    content = parts[0].strip()  # 留言内容
+                    timestamp = parts[1].strip()  # 时间戳
+                    messages.append((content, timestamp))
+                else:
+                    print(f"Warning: Line does not have the expected format: {line}")
     return messages
+
 
 # 将新留言保存到文件
 def save_message(content):
