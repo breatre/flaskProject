@@ -1,36 +1,24 @@
 from flask import Flask, request, send_file, render_template, jsonify, redirect, url_for
 from datetime import datetime
 import os
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 UPLOAD_FOLDER = '/var/www/videos'
-MESSAGE_FILE = 'messages.txt'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messages.db'  # SQLite 数据库文件
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 从文件加载留言
-def load_messages():
-    messages = []
-    with open('messages.txt', 'r') as file:
-        for line in file:
-            line = line.strip()
-            if line:  # 确保行不为空
-                # 使用 | 分割行，分成内容和时间戳
-                parts = line.split('|', 1)  # 只分割成两个部分
-                if len(parts) == 2:  # 确保我们得到了两个部分
-                    content = parts[0].strip()  # 留言内容
-                    timestamp = parts[1].strip()  # 时间戳
-                    messages.append((content, timestamp))
-                else:
-                    print(f"Warning: Line does not have the expected format: {line}")
-    return messages
+# 创建留言模型
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(200), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-
-# 将新留言保存到文件
-def save_message(content):
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(MESSAGE_FILE, 'a', encoding='utf-8') as f:
-        f.write(f"{content}|{timestamp}\n")
-
+# 创建数据库
+with app.app_context():
+    db.create_all()
 
 
 @app.route('/', methods=['GET'])
@@ -74,9 +62,12 @@ def message_wall():
     if request.method == 'POST':
         content = request.form.get('content')
         if content:
-            save_message(content)  # 保存到文件
+            new_message = Message(content=content)  # 创建新的留言对象
+            db.session.add(new_message)  # 将留言添加到会话
+            db.session.commit()  # 提交会话
             return redirect(url_for('message_wall'))
-    messages = load_messages()  # 从文件加载留言
+
+    messages = Message.query.order_by(Message.timestamp.desc()).all()  # 从数据库加载留言
     return render_template('message_wall.html', messages=messages)
 
 if __name__ == '__main__':
