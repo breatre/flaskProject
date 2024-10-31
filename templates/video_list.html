@@ -24,27 +24,49 @@
         .video-item {
             margin: 10px;
             text-align: center;
-            width: 30%;
+            width: 30%; /* 每行显示三列 */
         }
-        video {
-            width: 100%;
+        .video-thumbnail {
+            width: 100%; /* 统一视频封面大小 */
             height: auto;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #444;
+            width: 100%;
+        }
+        nav a {
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            text-align: center;
+        }
+        nav a:hover {
+            background-color: #555;
         }
     </style>
 </head>
 <body>
+    <nav>
+        <a href="index">首页</a>
+        <a href="upload">上传视频</a>
+        <a href="video_list">视频列表</a>
+        <a href="message_wall">留言墙</a>
+    </nav>
     <h1>Video List</h1>
     <div class="video-container">
         {% for video in videos %}
         <div class="video-item">
-            <video controls>
-                <source src="/stream/{{ video }}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+            <a href="{{ url_for('stream_file', filename=video) }}">
+                <img src="/var/www/videos/{{ video }}.jpg" class="video-thumbnail" alt="{{ video }}">
+            </a>
             <p>{{ video }}</p>
         </div>
         {% endfor %}
     </div>
 </body>
 </html>
-

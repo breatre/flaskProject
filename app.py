@@ -2,6 +2,7 @@ from flask import Flask, request, send_file, render_template, jsonify, redirect,
 from datetime import datetime
 import os
 from flask_sqlalchemy import SQLAlchemy
+import subprocess
 
 app = Flask(__name__)
 UPLOAD_FOLDER = '/var/www/videos'
@@ -20,9 +21,24 @@ class Message(db.Model):
 with app.app_context():
     db.create_all()
 
+def generate_thumbnail(video_path, thumbnail_path):
+    # 使用ffmpeg提取视频封面
+    command = [
+        'ffmpeg',
+        '-i', video_path,
+        '-ss', '00:00:01',  # 提取视频的第一秒作为封面
+        '-vframes', '1',
+        thumbnail_path
+    ]
+    subprocess.run(command)
+
 
 @app.route('/', methods=['GET'])
 def index():
+    return render_template('index.html')
+
+@app.route('/index', methods=['GET'])
+def index2():
     return render_template('index.html')
 
 
@@ -34,6 +50,11 @@ def upload_file():
         file = request.files['file']
         file_path = os.path.join(UPLOAD_FOLDER, file.filename)
         file.save(file_path)  # 上传文件保存到云服务器指定目录
+
+        # 生成封面图像
+        thumbnail_path = os.path.join(UPLOAD_FOLDER, f"{file.filename}.jpg")
+        generate_thumbnail(file_path, thumbnail_path)
+
         return jsonify(success=True, filename=file.filename)
     return render_template('upload.html')
 
@@ -42,6 +63,11 @@ def upload_file():
 @app.route('/stream/<filename>')
 def stream_file(filename):
     return send_file(os.path.join(UPLOAD_FOLDER, filename), as_attachment=False)
+
+@app.route('/play/<filename>', methods=['GET'])
+def play_video(filename):
+    return render_template('player.html', video_name=filename)
+
 
 
 @app.route('/videos', methods=['GET'])
