@@ -62,7 +62,7 @@
         {% for video in videos %}
         <div class="video-item">
             <a href="{{ url_for('stream_file', filename=video) }}">
-                <img src="/var/www/thumbnails/{{ video }}.jpg" class="video-thumbnail" alt="{{ video }}">
+                <img src="/var/www/thumbnails/{{ video.replace('.mp4', '') }}.jpg" class="video-thumbnail" alt="{{ video }}">
             </a>
             <p>{{ video }}</p>
         </div>

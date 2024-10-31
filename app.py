@@ -5,13 +5,13 @@ from flask_sqlalchemy import SQLAlchemy
 import subprocess
 
 app = Flask(__name__)
-THUMBNAIL_FOLDER = '/var/www/thumbnails'
+THUMBNAIL_FOLDER = os.path.join('var','www','thumbnails')
 os.makedirs(THUMBNAIL_FOLDER, exist_ok=True)
-UPLOAD_FOLDER = '/var/www/videos'
+VIDEOS_FOLDER = os.path.join('var', 'www', 'videos')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///messages.db'  # SQLite 数据库文件
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(VIDEOS_FOLDER, exist_ok=True)
 
 # 创建留言模型
 class Message(db.Model):
@@ -26,6 +26,7 @@ with app.app_context():
 def generate_thumbnail(video_path):
     base_filename = os.path.splitext(os.path.basename(video_path))[0]  # 去掉扩展名
     thumbnail_path = os.path.join(THUMBNAIL_FOLDER, f"{base_filename}.jpg")  # 生成封面路径
+    print(thumbnail_path)
     # 使用ffmpeg提取视频封面
     command = [
         '/usr/bin/ffmpeg',
@@ -52,7 +53,7 @@ def upload_file():
         if 'file' not in request.files:
             return 'No file part'
         file = request.files['file']
-        file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+        file_path = os.path.join(VIDEOS_FOLDER, file.filename)
         file.save(file_path)  # 上传文件保存到云服务器指定目录
 
         # 生成封面图像
@@ -65,7 +66,7 @@ def upload_file():
 
 @app.route('/stream/<filename>')
 def stream_file(filename):
-    return send_file(os.path.join(UPLOAD_FOLDER, filename), as_attachment=False)
+    return send_file(os.path.join(VIDEOS_FOLDER, filename), as_attachment=False)
 
 @app.route('/player/<filename>')
 def play_video(filename):
@@ -75,13 +76,13 @@ def play_video(filename):
 
 @app.route('/videos', methods=['GET'])
 def list_videos():
-    files = os.listdir(UPLOAD_FOLDER)
+    files = os.listdir(VIDEOS_FOLDER)
     return jsonify(videos=files)
 
 
 @app.route('/video_list', methods=['GET'])
 def video_list():
-    files = os.listdir(UPLOAD_FOLDER)
+    files = os.listdir(VIDEOS_FOLDER)
     print(files)  # 打印文件名列表
     return render_template('video_list.html', videos=files)
 
